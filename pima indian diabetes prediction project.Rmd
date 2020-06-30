@@ -1,0 +1,71 @@
+---
+title: "pimaindian randomforest project"
+author: "Ronak"
+date: "6/19/2020"
+output: pdf_document
+---
+This is a project where we use a machine learning classifier random forest to predict in the pima indians data set wheather the personmight be suffering from diabetes or not and in order to get finer results we will use repeated cross validation for resampling as well as the fact we will cross check answer with a confusion matrix
+
+
+```{r}
+library(neuralnet)
+library(ggplot2)
+library(tidyverse)
+library(mlbench)
+library(e1071)
+library(ranger)
+library(caret)
+```
+First we load the required libraries
+
+```{r}
+data("PimaIndiansDiabetes")
+df<-PimaIndiansDiabetes
+str(df)
+ggplot(df,aes(diabetes,fill=factor(diabetes)))+geom_bar()
+df$binary<-ifelse(df$diabetes=="neg",0,1)
+str(df)
+```
+Then we assign the data and use str() function to see what variables does the data set contain as the target variable is a categorical variable we will have to create a new binary column which represents the same so we make a new binary variable and to see the distrbution of data we use gg plot function
+
+```{r}
+rows<-createDataPartition(df$binary,times=1,p=.7,list=F)
+
+train<-df[rows,]
+test<-df[-rows,]
+dim(train)
+dim(test)
+names(test)
+```
+After this we create the data partition for the training and the test set of our model and then we check the dimensions of the dataset
+```{r}
+train<-train[,-9]
+test<-test[,-9]
+names(test)
+names(train)
+str(train)
+```
+Here we basically removed the extra variable "diabetes" from the training and test as they would have have given a wrong accuracy value as the model will show a higher prediction accuracy than the expected output model so we remove those 2 variables and clean our data
+
+```{r}
+
+model<-train(as.factor(binary) ~ . ,
+             data = train,
+             method = "ranger",
+             trControl = trainControl (method = "repeatedcv" , number = 2 , repeats = 2 ))
+model
+
+```
+so i created a model train where used the method random forest for classification and we train the data on the training set we just created and we use repreated cv resampling method to get more finer results we do this twice because we don't want a very long run time and the model to be fairly accurate
+
+-repeatedcv is resampling method which does repeated cross validation for better accuracy
+```{r}
+pred_train<-predict(model,train)
+pred_test<-predict(model,test)
+pred_test
+confusionMatrix(pred_test,as.factor(test$binary))#datatype of test var should be same as the way you defined it in the model
+```
+After this we predicted the value of test and train and then we ran a confusion matrix of predict test of a model that was built on our training data and it give an accuracy of 77.3% percent which is very high accuracy on the basis of this model and we can also clearly see that the value was predicted correct for 178 people while it predicted it incorrectly for 52 people
+
+Summary: In this machine learning project we took the data and added a new binary variable cleaned it and partitioned it; Then we utilized random forest classifier to make use of the data and predict whether the given population of pima-indians data set is suffering from diabetes or not we employed repeated cross validation for refined accuracy of the model and a confusion matrix to to cross check our answers accuracy (hope you liked this project)
+
